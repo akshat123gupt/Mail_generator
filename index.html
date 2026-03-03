@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Job Email Agent</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f4ff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
+    h1 { font-size: 32px; color: #2d2d2d; margin-bottom: 8px; }
+    p.sub { color: #888; margin-bottom: 32px; }
+    .card { background: white; border-radius: 16px; padding: 32px; width: 100%; max-width: 680px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+    label { display: block; font-weight: 600; color: #444; margin-bottom: 6px; margin-top: 20px; }
+    input[type=file] { width: 100%; padding: 10px; border: 2px dashed #c0c8ff; border-radius: 8px; background: #f8f9ff; cursor: pointer; }
+    textarea { width: 100%; height: 140px; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; resize: vertical; }
+    button { margin-top: 24px; width: 100%; padding: 14px; background: #4f46e5; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    button:hover { background: #4338ca; }
+    button:disabled { background: #a5b4fc; cursor: not-allowed; }
+    #result { margin-top: 28px; display: none; }
+    #result h3 { color: #2d2d2d; margin-bottom: 12px; }
+    #emailBox { background: #f8f9ff; border: 1px solid #e0e4ff; border-radius: 10px; padding: 20px; white-space: pre-wrap; font-size: 14px; line-height: 1.7; color: #333; }
+    .copy-btn { margin-top: 12px; padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; width: auto; }
+    .copy-btn:hover { background: #059669; }
+    .loader { text-align: center; padding: 20px; color: #666; display: none; }
+    nav { margin-bottom: 24px; }
+    nav a { color: #4f46e5; text-decoration: none; font-weight: 600; margin-right: 20px; }
+  </style>
+</head>
+<body>
+  <nav><a href="/">🤖 Generator</a><a href="/history">📋 History</a></nav>
+  <h1>🤖 AI Job Email Agent</h1>
+  <p class="sub">Upload your resume + paste a job description → get a personalized email instantly</p>
+
+  <div class="card">
+    <form id="form">
+      <label>📄 Your Resume (PDF)</label>
+      <input type="file" id="resume" accept=".pdf" required>
+
+      <label>💼 Job Description</label>
+      <textarea id="jobDesc" placeholder="Paste the full job description here..." required></textarea>
+
+      <button type="submit" id="btn">✨ Generate My Email</button>
+    </form>
+
+    <div class="loader" id="loader">⏳ AI is writing your email... (10-20 seconds)</div>
+
+    <div id="result">
+      <h3>📧 Your Personalized Email:</h3>
+      <div id="emailBox"></div>
+      <button class="copy-btn" onclick="copyEmail()">📋 Copy Email</button>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('form').onsubmit = async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btn');
+      const loader = document.getElementById('loader');
+      const result = document.getElementById('result');
+
+      btn.disabled = true;
+      btn.textContent = 'Generating...';
+      loader.style.display = 'block';
+      result.style.display = 'none';
+
+      const formData = new FormData();
+      formData.append('resume', document.getElementById('resume').files[0]);
+      formData.append('job_description', document.getElementById('jobDesc').value);
+
+      try {
+        const res = await fetch('/generate', { method: 'POST', body: formData });
+        const data = await res.json();
+        document.getElementById('emailBox').textContent = data.email;
+        result.style.display = 'block';
+      } catch (err) {
+        alert('Something went wrong! Check your Terminal for errors.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '✨ Generate My Email';
+        loader.style.display = 'none';
+      }
+    };
+
+    function copyEmail() {
+      navigator.clipboard.writeText(document.getElementById('emailBox').textContent);
+      alert('Email copied to clipboard! ✅');
+    }
+  </script>
+</body>
+</html>
+```
+
+Save it ✅
+
+---
+
+Now go back to Terminal and **paste this to start your app:**
+```
+uvicorn main:app --reload
+```
+
+Then open your browser and go to:
+```
+http://localhost:8000
