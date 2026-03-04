@@ -1,103 +1,348 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>AI Job Email Agent by Akshat Gupta</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', sans-serif; background: #f0f4ff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
-    h1 { font-size: 32px; color: #2d2d2d; margin-bottom: 8px; }
-    p.sub { color: #888; margin-bottom: 32px; }
-    .card { background: white; border-radius: 16px; padding: 32px; width: 100%; max-width: 680px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
-    label { display: block; font-weight: 600; color: #444; margin-bottom: 6px; margin-top: 20px; }
-    input[type=file] { width: 100%; padding: 10px; border: 2px dashed #c0c8ff; border-radius: 8px; background: #f8f9ff; cursor: pointer; }
-    textarea { width: 100%; height: 140px; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; resize: vertical; }
-    button { margin-top: 24px; width: 100%; padding: 14px; background: #4f46e5; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-    button:hover { background: #4338ca; }
-    button:disabled { background: #a5b4fc; cursor: not-allowed; }
-    #result { margin-top: 28px; display: none; }
-    #result h3 { color: #2d2d2d; margin-bottom: 12px; }
-    #emailBox { background: #f8f9ff; border: 1px solid #e0e4ff; border-radius: 10px; padding: 20px; white-space: pre-wrap; font-size: 14px; line-height: 1.7; color: #333; }
-    .copy-btn { margin-top: 12px; padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; width: auto; }
-    .copy-btn:hover { background: #059669; }
-    .loader { text-align: center; padding: 20px; color: #666; display: none; }
-    nav { margin-bottom: 24px; }
-    nav a { color: #4f46e5; text-decoration: none; font-weight: 600; margin-right: 20px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JobAgent AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Inter',sans-serif; background:#fff; color:#1a1a2e; overflow-x:hidden; }
+nav { display:flex; align-items:center; justify-content:space-between; padding:20px 60px; background:#eef0f8; position:sticky; top:0; z-index:100; }
+.logo { display:flex; align-items:center; gap:10px; font-size:18px; font-weight:700; color:#1a1a2e; text-decoration:none; }
+.logo-icon { width:36px; height:36px; background:#4f46e5; border-radius:8px; display:flex; align-items:center; justify-content:center; color:white; font-size:18px; }
+.nav-links { display:flex; align-items:center; gap:32px; }
+.nav-links a { text-decoration:none; color:#1a1a2e; font-size:15px; font-weight:500; transition:color 0.2s; }
+.nav-links a:hover { color:#4f46e5; }
+.btn-primary { background:#4f46e5; color:white !important; border:none; padding:12px 24px; border-radius:10px; font-size:15px; font-weight:600; cursor:pointer; text-decoration:none !important; }
+.btn-primary:hover { background:#4338ca; }
+.hero { background:#eef0f8; padding:80px 60px; display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:center; min-height:calc(100vh - 76px); }
+.hero-badge { display:inline-flex; align-items:center; gap:8px; background:rgba(79,70,229,0.08); border:1px solid rgba(79,70,229,0.15); color:#4f46e5; padding:8px 16px; border-radius:100px; font-size:13px; font-weight:500; margin-bottom:28px; }
+.hero h1 { font-size:60px; font-weight:800; line-height:1.1; color:#0f0f1a; margin-bottom:24px; }
+.hero p { font-size:17px; color:#6b7280; line-height:1.7; margin-bottom:40px; }
+.hero-buttons { display:flex; gap:16px; }
+.btn-hero { background:#4f46e5; color:white !important; border:none; padding:16px 32px; border-radius:12px; font-size:16px; font-weight:600; cursor:pointer; text-decoration:none !important; display:inline-block; transition:all 0.2s; }
+.btn-hero:hover { background:#4338ca; transform:translateY(-2px); box-shadow:0 8px 24px rgba(79,70,229,0.3); }
+.btn-hero-outline { background:white; color:#1a1a2e !important; border:1.5px solid #d1d5db; padding:16px 32px; border-radius:12px; font-size:16px; font-weight:600; cursor:pointer; text-decoration:none !important; display:inline-block; transition:all 0.2s; }
+.btn-hero-outline:hover { border-color:#4f46e5; color:#4f46e5 !important; }
+.hero-visual { background:linear-gradient(135deg,#1e3a5f,#1a4a6e); border-radius:20px; height:420px; display:flex; align-items:center; justify-content:center; box-shadow:0 24px 60px rgba(0,0,0,0.15); }
+.hero-visual-text { color:rgba(255,255,255,0.7); font-size:16px; text-align:center; }
+.features { padding:100px 60px; background:white; text-align:center; }
+.section-title { font-size:48px; font-weight:800; color:#0f0f1a; margin-bottom:12px; }
+.section-sub { font-size:17px; color:#6b7280; margin-bottom:60px; }
+.features-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; max-width:1100px; margin:0 auto; }
+.feature-card { border:1.5px solid #e5e7eb; border-radius:16px; padding:32px; text-align:left; transition:all 0.2s; }
+.feature-card:hover { border-color:#4f46e5; box-shadow:0 8px 32px rgba(79,70,229,0.1); transform:translateY(-4px); }
+.feature-icon { width:56px; height:56px; background:#eef0f8; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:24px; margin-bottom:20px; }
+.feature-card h3 { font-size:18px; font-weight:700; margin-bottom:12px; }
+.feature-card p { font-size:14px; color:#6b7280; line-height:1.7; }
+.pricing { padding:100px 60px; background:#f9fafb; text-align:center; }
+.pricing-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; max-width:1000px; margin:0 auto; align-items:start; }
+.pricing-card { background:white; border:1.5px solid #e5e7eb; border-radius:20px; padding:36px; text-align:left; position:relative; transition:all 0.2s; }
+.pricing-card:hover { transform:translateY(-4px); box-shadow:0 12px 40px rgba(0,0,0,0.08); }
+.pricing-card.popular { background:#4f46e5; border-color:#4f46e5; margin-top:-16px; padding-top:52px; }
+.popular-badge { position:absolute; top:-14px; left:50%; transform:translateX(-50%); background:#10b981; color:white; padding:6px 20px; border-radius:100px; font-size:13px; font-weight:600; white-space:nowrap; }
+.pricing-plan { font-size:18px; font-weight:700; margin-bottom:8px; color:#0f0f1a; }
+.pricing-card.popular .pricing-plan { color:white; }
+.pricing-price { font-size:48px; font-weight:800; color:#0f0f1a; }
+.pricing-card.popular .pricing-price { color:white; }
+.pricing-period { font-size:16px; font-weight:400; color:#6b7280; }
+.pricing-card.popular .pricing-period { color:rgba(255,255,255,0.7); }
+.pricing-features { list-style:none; margin:28px 0; display:flex; flex-direction:column; gap:12px; }
+.pricing-features li { display:flex; align-items:center; gap:10px; font-size:14px; color:#374151; }
+.pricing-card.popular .pricing-features li { color:rgba(255,255,255,0.9); }
+.check { width:20px; height:20px; border-radius:50%; background:rgba(16,185,129,0.15); border:1.5px solid #10b981; display:flex; align-items:center; justify-content:center; color:#10b981; font-size:11px; flex-shrink:0; }
+.pricing-card.popular .check { background:rgba(255,255,255,0.15); border-color:rgba(255,255,255,0.5); color:white; }
+.btn-pricing { width:100%; padding:14px; border-radius:10px; font-size:15px; font-weight:600; cursor:pointer; border:1.5px solid #d1d5db; background:white; color:#1a1a2e; font-family:'Inter',sans-serif; transition:all 0.2s; }
+.btn-pricing:hover { border-color:#4f46e5; color:#4f46e5; }
+.btn-pricing-white { width:100%; padding:14px; border-radius:10px; font-size:15px; font-weight:600; cursor:pointer; border:none; background:white; color:#4f46e5; font-family:'Inter',sans-serif; transition:all 0.2s; }
+footer { background:#f9fafb; border-top:1px solid #e5e7eb; padding:60px; display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:40px; }
+.footer-brand p { font-size:13px; color:#6b7280; margin-top:12px; line-height:1.6; max-width:220px; }
+.footer-col h4 { font-size:14px; font-weight:700; color:#0f0f1a; margin-bottom:16px; }
+.footer-col a { display:block; font-size:14px; color:#6b7280; text-decoration:none; margin-bottom:10px; }
+.footer-col a:hover { color:#4f46e5; }
+</style>
+<style>
+.app-page { display:none; min-height:100vh; background:#f3f4f6; }
+.app-nav { background:white; border-bottom:1px solid #e5e7eb; padding:16px 32px; display:flex; align-items:center; justify-content:space-between; }
+.app-content { max-width:800px; margin:40px auto; padding:0 20px; }
+.app-card { background:white; border-radius:16px; padding:40px; box-shadow:0 2px 16px rgba(0,0,0,0.06); margin-bottom:24px; }
+.app-card h2 { font-size:22px; font-weight:700; margin-bottom:6px; }
+.app-sub { color:#6b7280; font-size:14px; margin-bottom:28px; }
+.upload-zone { border:2px dashed #c7d2fe; border-radius:12px; padding:40px; text-align:center; background:#f5f3ff; cursor:pointer; margin-bottom:20px; transition:all 0.2s; }
+.upload-zone:hover { border-color:#4f46e5; background:#ede9fe; }
+.upload-icon { font-size:40px; margin-bottom:12px; }
+.upload-zone p { color:#6b7280; font-size:14px; }
+.upload-zone strong { color:#4f46e5; }
+.form-label { display:block; font-size:14px; font-weight:600; color:#374151; margin-bottom:8px; margin-top:20px; }
+.form-textarea { width:100%; height:160px; padding:14px 16px; border:1.5px solid #e5e7eb; border-radius:10px; font-size:14px; font-family:'Inter',sans-serif; resize:vertical; outline:none; color:#1a1a2e; transition:border-color 0.2s; }
+.form-textarea:focus { border-color:#4f46e5; }
+.btn-generate { width:100%; padding:16px; background:#4f46e5; color:white; border:none; border-radius:12px; font-size:16px; font-weight:600; cursor:pointer; margin-top:24px; font-family:'Inter',sans-serif; transition:all 0.2s; }
+.btn-generate:hover { background:#4338ca; transform:translateY(-1px); box-shadow:0 6px 20px rgba(79,70,229,0.3); }
+.btn-generate:disabled { background:#a5b4fc; cursor:not-allowed; transform:none; box-shadow:none; }
+.result-box { display:none; background:#f8f9ff; border:1.5px solid #e0e4ff; border-radius:12px; padding:24px; margin-top:24px; white-space:pre-wrap; font-size:14px; line-height:1.8; color:#374151; }
+.result-actions { display:none; gap:12px; margin-top:16px; }
+.btn-copy { padding:10px 20px; background:#10b981; color:white; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; transition:background 0.2s; }
+.btn-copy:hover { background:#059669; }
+.loader { display:none; text-align:center; padding:20px; color:#6b7280; font-size:14px; }
+.spinner { display:inline-block; width:20px; height:20px; border:2px solid #e5e7eb; border-top-color:#4f46e5; border-radius:50%; animation:spin 0.8s linear infinite; margin-right:8px; vertical-align:middle; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.user-bar { display:flex; align-items:center; gap:12px; }
+.user-avatar { width:32px; height:32px; border-radius:50%; object-fit:cover; }
+.user-name { font-size:14px; font-weight:500; color:#374151; }
+.btn-logout { padding:8px 16px; background:#f3f4f6; border:1px solid #e5e7eb; border-radius:8px; font-size:13px; color:#6b7280; cursor:pointer; font-family:'Inter',sans-serif; text-decoration:none; }
+.btn-logout:hover { background:#fee2e2; color:#ef4444; border-color:#fca5a5; }
+.history-item { padding:16px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; margin-bottom:12px; }
+.history-date { font-size:12px; color:#6b7280; margin-bottom:6px; }
+.history-preview { font-size:13px; color:#374151; line-height:1.6; }
+@media(max-width:900px) {
+  nav { padding:16px 24px; }
+  .hero { grid-template-columns:1fr; padding:60px 24px; gap:40px; min-height:auto; }
+  .features { padding:60px 24px; }
+  .features-grid { grid-template-columns:1fr; }
+  .pricing { padding:60px 24px; }
+  .pricing-grid { grid-template-columns:1fr; }
+  .pricing-card.popular { margin-top:0; }
+  footer { grid-template-columns:1fr 1fr; padding:40px 24px; }
+}
+</style>
 </head>
 <body>
-  <nav><a href="/">🤖 Generator</a><a href="/history">📋 History</a></nav>
-  <h1>🤖 AI Job Email Agent</h1>
-  <p class="sub">Upload your resume + paste a job description → get a personalized email instantly</p>
 
-  <div class="card">
-    <form id="form">
-      <label>📄 Your Resume (PDF)</label>
-      <input type="file" id="resume" accept=".pdf" required>
+<div id="landing">
+<nav>
+  <a class="logo" href="/"><div class="logo-icon">✦</div>JobAgent AI</a>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#pricing">Pricing</a>
+    <a href="/auth/google">Login</a>
+    <a href="/auth/google" class="btn-primary">Get Started</a>
+  </div>
+</nav>
 
-      <label>💼 Job Description</label>
-      <textarea id="jobDesc" placeholder="Paste the full job description here..." required></textarea>
-
-      <button type="submit" id="btn">✨ Generate My Email</button>
-    </form>
-
-    <div class="loader" id="loader">⏳ AI is writing your email... (10-20 seconds)</div>
-
-    <div id="result">
-      <h3>📧 Your Personalized Email:</h3>
-      <div id="emailBox"></div>
-      <button class="copy-btn" onclick="copyEmail()">📋 Copy Email</button>
+<section class="hero">
+  <div>
+    <div class="hero-badge">✦ AI-Powered Job Applications</div>
+    <h1>Let AI Apply to Jobs For You</h1>
+    <p>Stop wasting time on repetitive applications. Our AI agent automatically finds jobs and writes personalized emails while you focus on interview prep.</p>
+    <div class="hero-buttons">
+      <a href="/auth/google" class="btn-hero">Get Started Free</a>
+      <a href="#features" class="btn-hero-outline">See Features</a>
     </div>
   </div>
+  <div class="hero-visual">
+    <div class="hero-visual-text">
+      <div style="font-size:64px;margin-bottom:16px;">🏢</div>
+      <div>Your dream job awaits</div>
+    </div>
+  </div>
+</section>
 
-  <script>
-    document.getElementById('form').onsubmit = async (e) => {
-      e.preventDefault();
-      const btn = document.getElementById('btn');
-      const loader = document.getElementById('loader');
-      const result = document.getElementById('result');
+<section class="features" id="features">
+  <div class="section-title">Powerful Features</div>
+  <div class="section-sub">Everything you need to automate your job search</div>
+  <div class="features-grid">
+    <div class="feature-card"><div class="feature-icon">✦</div><h3>AI Personalization</h3><p>Our AI crafts personalized emails tailored to each job posting, highlighting your unique skills and experience.</p></div>
+    <div class="feature-card"><div class="feature-icon">✉️</div><h3>Gmail & Outlook</h3><p>Seamlessly connects with your email to send applications and track responses from one dashboard.</p></div>
+    <div class="feature-card"><div class="feature-icon">📊</div><h3>Track Everything</h3><p>Monitor your application progress, track responses, and manage interviews all in one place.</p></div>
+  </div>
+</section>
 
-      btn.disabled = true;
-      btn.textContent = 'Generating...';
-      loader.style.display = 'block';
-      result.style.display = 'none';
+<section class="pricing" id="pricing">
+  <div class="section-title">Simple Pricing</div>
+  <div class="section-sub">Start free, upgrade when you need more</div>
+  <div class="pricing-grid">
+    <div class="pricing-card">
+      <div class="pricing-plan">Free</div>
+      <div class="pricing-price">$0<span class="pricing-period">/mo</span></div>
+      <ul class="pricing-features">
+        <li><span class="check">✓</span>5 applications/week</li>
+        <li><span class="check">✓</span>Basic AI emails</li>
+        <li><span class="check">✓</span>Email tracking</li>
+      </ul>
+      <button class="btn-pricing" onclick="window.location='/auth/google'">Get Started</button>
+    </div>
+    <div class="pricing-card popular">
+      <div class="popular-badge">Most Popular</div>
+      <div class="pricing-plan">Pro</div>
+      <div class="pricing-price">$29<span class="pricing-period">/mo</span></div>
+      <ul class="pricing-features">
+        <li><span class="check">✓</span>Unlimited applications</li>
+        <li><span class="check">✓</span>Advanced AI emails</li>
+        <li><span class="check">✓</span>Gmail & Outlook</li>
+        <li><span class="check">✓</span>Priority support</li>
+      </ul>
+      <button class="btn-pricing-white" onclick="window.location='/auth/google'">Get Started</button>
+    </div>
+    <div class="pricing-card">
+      <div class="pricing-plan">Enterprise</div>
+      <div class="pricing-price">$99<span class="pricing-period">/mo</span></div>
+      <ul class="pricing-features">
+        <li><span class="check">✓</span>Everything in Pro</li>
+        <li><span class="check">✓</span>Multi-user accounts</li>
+        <li><span class="check">✓</span>API access</li>
+        <li><span class="check">✓</span>Dedicated support</li>
+      </ul>
+      <button class="btn-pricing">Contact Sales</button>
+    </div>
+  </div>
+</section>
 
-      const formData = new FormData();
-      formData.append('resume', document.getElementById('resume').files[0]);
-      formData.append('job_description', document.getElementById('jobDesc').value);
+<footer>
+  <div class="footer-brand">
+    <div class="logo"><div class="logo-icon">✦</div>JobAgent AI</div>
+    <p>Automate your job search with AI-powered applications.</p>
+  </div>
+  <div class="footer-col"><h4>Product</h4><a href="#features">Features</a><a href="#pricing">Pricing</a></div>
+  <div class="footer-col"><h4>Company</h4><a href="#">About</a><a href="#">Blog</a></div>
+  <div class="footer-col"><h4>Legal</h4><a href="#">Privacy</a><a href="#">Terms</a></div>
+</footer>
+</div>
+<div class="app-page" id="appPage">
+  <div class="app-nav">
+    <div class="logo"><div class="logo-icon">✦</div>JobAgent AI</div>
+    <div class="user-bar">
+      <img class="user-avatar" id="userAvatar" src="" alt="">
+      <span class="user-name" id="userName"></span>
+      <a href="/logout" class="btn-logout">Sign Out</a>
+      <a href="#" style="text-decoration:none;color:#6b7280;font-size:14px;margin-left:8px;" onclick="showHistory();return false;">📋 History</a>
+    </div>
+  </div>
+  <div class="app-content">
+    <div class="app-card">
+      <h2>🤖 Generate Your Email</h2>
+      <p class="app-sub">Upload your resume and paste a job description to get a personalized email instantly</p>
+      <label class="form-label">📄 Your Resume (PDF)</label>
+      <div class="upload-zone" onclick="document.getElementById('resumeFile').click()">
+        <div class="upload-icon">📄</div>
+        <p><strong>Click to upload</strong> or drag and drop</p>
+        <p style="margin-top:4px;font-size:12px;">PDF files only</p>
+        <input type="file" id="resumeFile" accept=".pdf" style="display:none;">
+      </div>
+      <div id="fileName" style="font-size:13px;color:#4f46e5;margin-bottom:8px;display:none;"></div>
+      <label class="form-label">💼 Job Description</label>
+      <textarea class="form-textarea" id="jobDesc" placeholder="Paste the full job description here..."></textarea>
+      <button class="btn-generate" id="generateBtn" onclick="generateEmail()">✨ Generate My Email</button>
+      <div class="loader" id="loader"><span class="spinner"></span>AI is writing your email...</div>
+      <div class="result-box" id="resultBox"></div>
+      <div class="result-actions" id="resultActions">
+        <button class="btn-copy" onclick="copyEmail()">📋 Copy Email</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-      try {
-        const res = await fetch('/generate', { method: 'POST', body: formData });
-        const data = await res.json();
-        document.getElementById('emailBox').textContent = data.email;
-        result.style.display = 'block';
-      } catch (err) {
-        alert('Something went wrong! Check your Terminal for errors.');
-      } finally {
-        btn.disabled = false;
-        btn.textContent = '✨ Generate My Email';
-        loader.style.display = 'none';
+<div id="historyPage" style="display:none;min-height:100vh;background:#f3f4f6;">
+  <div class="app-nav">
+    <div class="logo"><div class="logo-icon">✦</div>JobAgent AI</div>
+    <a href="#" style="text-decoration:none;color:#6b7280;font-size:14px;" onclick="showApp();return false;">← Back</a>
+  </div>
+  <div class="app-content">
+    <div class="app-card">
+      <h2>📋 Application History</h2>
+      <p class="app-sub">All your previously generated emails</p>
+      <div id="historyList" style="margin-top:20px;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.onload = async function() {
+  try {
+    var res = await fetch('/me');
+    var data = await res.json();
+    if (data.logged_in) {
+      document.getElementById('landing').style.display = 'none';
+      document.getElementById('appPage').style.display = 'block';
+      document.getElementById('userName').textContent = data.user.name;
+      if (data.user.picture) {
+        document.getElementById('userAvatar').src = data.user.picture;
+        document.getElementById('userAvatar').style.display = 'block';
       }
-    };
-
-    function copyEmail() {
-      navigator.clipboard.writeText(document.getElementById('emailBox').textContent);
-      alert('Email copied to clipboard! ✅');
+    } else {
+      document.getElementById('landing').style.display = 'block';
+      document.getElementById('appPage').style.display = 'none';
     }
-  </script>
+  } catch(e) {
+    document.getElementById('landing').style.display = 'block';
+  }
+};
+
+document.getElementById('resumeFile').addEventListener('change', function() {
+  if (this.files[0]) {
+    var fn = document.getElementById('fileName');
+    fn.textContent = '✅ ' + this.files[0].name;
+    fn.style.display = 'block';
+  }
+});
+
+function showApp() {
+  document.getElementById('appPage').style.display = 'block';
+  document.getElementById('historyPage').style.display = 'none';
+}
+
+function showHistory() {
+  document.getElementById('appPage').style.display = 'none';
+  document.getElementById('historyPage').style.display = 'block';
+  loadHistory();
+}
+
+async function generateEmail() {
+  var file = document.getElementById('resumeFile').files[0];
+  var jobDesc = document.getElementById('jobDesc').value;
+  if (!file) { alert('Please upload your resume PDF first!'); return; }
+  if (!jobDesc) { alert('Please paste a job description!'); return; }
+  var btn = document.getElementById('generateBtn');
+  var loader = document.getElementById('loader');
+  var resultBox = document.getElementById('resultBox');
+  var resultActions = document.getElementById('resultActions');
+  btn.disabled = true;
+  btn.textContent = 'Generating...';
+  loader.style.display = 'block';
+  resultBox.style.display = 'none';
+  resultActions.style.display = 'none';
+  var formData = new FormData();
+  formData.append('resume', file);
+  formData.append('job_description', jobDesc);
+  try {
+    var res = await fetch('/generate', { method:'POST', body:formData });
+    var data = await res.json();
+    resultBox.textContent = data.email;
+    resultBox.style.display = 'block';
+    resultActions.style.display = 'flex';
+  } catch(err) {
+    alert('Something went wrong! Make sure your server is running.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✨ Generate My Email';
+    loader.style.display = 'none';
+  }
+}
+
+function copyEmail() {
+  var text = document.getElementById('resultBox').textContent;
+  navigator.clipboard.writeText(text);
+  var btn = event.target;
+  btn.textContent = '✅ Copied!';
+  setTimeout(function(){ btn.textContent = '📋 Copy Email'; }, 2000);
+}
+
+async function loadHistory() {
+  try {
+    var res = await fetch('/history');
+    var data = await res.json();
+    var list = document.getElementById('historyList');
+    if (data.drafts.length === 0) {
+      list.innerHTML = '<p style="color:#6b7280;text-align:center;padding:40px;">No emails yet. <a href="#" onclick="showApp();return false;" style="color:#4f46e5;">Generate your first one!</a></p>';
+      return;
+    }
+    list.innerHTML = data.drafts.map(function(h) {
+      return '<div class="history-item"><div class="history-date">'+h.date+' • '+h.job+'</div><div class="history-preview">'+h.email.substring(0,150)+'...</div></div>';
+    }).join('');
+  } catch(e) {
+    document.getElementById('historyList').innerHTML = '<p style="color:#ef4444;">Could not load history.</p>';
+  }
+}
+</script>
 </body>
 </html>
-```
-
-Save it ✅
-
----
-
-Now go back to Terminal and **paste this to start your app:**
-```
-uvicorn main:app --reload
-```
-
-Then open your browser and go to:
-```
-http://localhost:8000
