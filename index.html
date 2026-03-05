@@ -84,6 +84,12 @@ footer { background:#f9fafb; border-top:1px solid #e5e7eb; padding:60px; display
 .result-actions { display:none; gap:12px; margin-top:16px; }
 .btn-copy { padding:10px 20px; background:#10b981; color:white; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; transition:background 0.2s; }
 .btn-copy:hover { background:#059669; }
+.send-section { display:none; margin-top:20px; padding:24px; background:#f0fdf4; border:1.5px solid #86efac; border-radius:12px; }
+.send-section label { display:block; font-size:14px; font-weight:600; color:#15803d; margin-bottom:12px; }
+.send-input { width:100%; padding:12px 16px; border:1.5px solid #e5e7eb; border-radius:10px; font-size:14px; font-family:'Inter',sans-serif; outline:none; margin-bottom:12px; color:#1a1a2e; }
+.send-input:focus { border-color:#16a34a; }
+.btn-send { width:100%; padding:14px; background:#16a34a; color:white; border:none; border-radius:10px; font-size:15px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.2s; }
+.btn-send:hover { background:#15803d; transform:translateY(-1px); }
 .loader { display:none; text-align:center; padding:20px; color:#6b7280; font-size:14px; }
 .spinner { display:inline-block; width:20px; height:20px; border:2px solid #e5e7eb; border-top-color:#4f46e5; border-radius:50%; animation:spin 0.8s linear infinite; margin-right:8px; vertical-align:middle; }
 @keyframes spin { to { transform:rotate(360deg); } }
@@ -108,7 +114,6 @@ footer { background:#f9fafb; border-top:1px solid #e5e7eb; padding:60px; display
 </style>
 </head>
 <body>
-
 <div id="landing">
 <nav>
   <a class="logo" href="/"><div class="logo-icon">✦</div>JobAgent AI</a>
@@ -143,7 +148,7 @@ footer { background:#f9fafb; border-top:1px solid #e5e7eb; padding:60px; display
   <div class="section-sub">Everything you need to automate your job search</div>
   <div class="features-grid">
     <div class="feature-card"><div class="feature-icon">✦</div><h3>AI Personalization</h3><p>Our AI crafts personalized emails tailored to each job posting, highlighting your unique skills and experience.</p></div>
-    <div class="feature-card"><div class="feature-icon">✉️</div><h3>Gmail & Outlook</h3><p>Seamlessly connects with your email to send applications and track responses from one dashboard.</p></div>
+    <div class="feature-card"><div class="feature-icon">✉️</div><h3>Gmail Integration</h3><p>Seamlessly connects with your Gmail to send applications and track responses from one dashboard.</p></div>
     <div class="feature-card"><div class="feature-icon">📊</div><h3>Track Everything</h3><p>Monitor your application progress, track responses, and manage interviews all in one place.</p></div>
   </div>
 </section>
@@ -169,7 +174,7 @@ footer { background:#f9fafb; border-top:1px solid #e5e7eb; padding:60px; display
       <ul class="pricing-features">
         <li><span class="check">✓</span>Unlimited applications</li>
         <li><span class="check">✓</span>Advanced AI emails</li>
-        <li><span class="check">✓</span>Gmail & Outlook</li>
+        <li><span class="check">✓</span>Gmail integration</li>
         <li><span class="check">✓</span>Priority support</li>
       </ul>
       <button class="btn-pricing-white" onclick="window.location='/auth/google'">Get Started</button>
@@ -202,10 +207,10 @@ footer { background:#f9fafb; border-top:1px solid #e5e7eb; padding:60px; display
   <div class="app-nav">
     <div class="logo"><div class="logo-icon">✦</div>JobAgent AI</div>
     <div class="user-bar">
-      <img class="user-avatar" id="userAvatar" src="" alt="">
+      <img class="user-avatar" id="userAvatar" src="" alt="" style="display:none;">
       <span class="user-name" id="userName"></span>
+      <a href="#" style="text-decoration:none;color:#6b7280;font-size:14px;" onclick="showHistory();return false;">📋 History</a>
       <a href="/logout" class="btn-logout">Sign Out</a>
-      <a href="#" style="text-decoration:none;color:#6b7280;font-size:14px;margin-left:8px;" onclick="showHistory();return false;">📋 History</a>
     </div>
   </div>
   <div class="app-content">
@@ -227,6 +232,13 @@ footer { background:#f9fafb; border-top:1px solid #e5e7eb; padding:60px; display
       <div class="result-box" id="resultBox"></div>
       <div class="result-actions" id="resultActions">
         <button class="btn-copy" onclick="copyEmail()">📋 Copy Email</button>
+      </div>
+      <div class="send-section" id="sendSection">
+        <label>📧 Send this email directly from your Gmail</label>
+        <input class="send-input" type="email" id="recipientEmail" placeholder="hiring@company.com">
+        <input class="send-input" type="text" id="emailSubject" placeholder="Subject: Application for [Job Title]">
+        <button class="btn-send" onclick="sendEmail()">🚀 Send Email via Gmail</button>
+        <div id="sendStatus" style="margin-top:12px;font-size:14px;text-align:center;"></div>
       </div>
     </div>
   </div>
@@ -256,8 +268,9 @@ window.onload = async function() {
       document.getElementById('appPage').style.display = 'block';
       document.getElementById('userName').textContent = data.user.name;
       if (data.user.picture) {
-        document.getElementById('userAvatar').src = data.user.picture;
-        document.getElementById('userAvatar').style.display = 'block';
+        var av = document.getElementById('userAvatar');
+        av.src = data.user.picture;
+        av.style.display = 'block';
       }
     } else {
       document.getElementById('landing').style.display = 'block';
@@ -296,11 +309,13 @@ async function generateEmail() {
   var loader = document.getElementById('loader');
   var resultBox = document.getElementById('resultBox');
   var resultActions = document.getElementById('resultActions');
+  var sendSection = document.getElementById('sendSection');
   btn.disabled = true;
   btn.textContent = 'Generating...';
   loader.style.display = 'block';
   resultBox.style.display = 'none';
   resultActions.style.display = 'none';
+  sendSection.style.display = 'none';
   var formData = new FormData();
   formData.append('resume', file);
   formData.append('job_description', jobDesc);
@@ -310,6 +325,7 @@ async function generateEmail() {
     resultBox.textContent = data.email;
     resultBox.style.display = 'block';
     resultActions.style.display = 'flex';
+    sendSection.style.display = 'block';
   } catch(err) {
     alert('Something went wrong! Make sure your server is running.');
   } finally {
@@ -325,6 +341,35 @@ function copyEmail() {
   var btn = event.target;
   btn.textContent = '✅ Copied!';
   setTimeout(function(){ btn.textContent = '📋 Copy Email'; }, 2000);
+}
+
+async function sendEmail() {
+  var recipient = document.getElementById('recipientEmail').value;
+  var subject = document.getElementById('emailSubject').value;
+  var body = document.getElementById('resultBox').textContent;
+  var status = document.getElementById('sendStatus');
+  if (!recipient) { alert('Please enter recipient email!'); return; }
+  if (!subject) { alert('Please enter a subject!'); return; }
+  status.textContent = '⏳ Sending...';
+  status.style.color = '#6b7280';
+  try {
+    var res = await fetch('/send-email', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body:JSON.stringify({ recipient:recipient, subject:subject, body:body })
+    });
+    var data = await res.json();
+    if (data.success) {
+      status.textContent = '✅ Email sent successfully!';
+      status.style.color = '#16a34a';
+    } else {
+      status.textContent = '❌ Error: ' + data.error;
+      status.style.color = '#ef4444';
+    }
+  } catch(err) {
+    status.textContent = '❌ Something went wrong!';
+    status.style.color = '#ef4444';
+  }
 }
 
 async function loadHistory() {
