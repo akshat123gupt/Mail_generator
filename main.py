@@ -1,12 +1,15 @@
 from fastapi import FastAPI, UploadFile, File, Form, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from authlib.integrations.starlette_client import OAuth
 from dotenv import load_dotenv
 from database import SessionLocal, Resume, EmailDraft
 from groq import Groq
-import pdfplumber, os, uuid, io
+from googleapiclient.discovery import build
+from google.oauth2.credentials import Credentials
+import pdfplumber, os, uuid, io, base64
+from email.mime.text import MIMEText
 
 load_dotenv()
 
@@ -22,14 +25,14 @@ oauth.register(
     client_id=os.getenv("GOOGLE_CLIENT_ID"),
     client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
     server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
-    client_kwargs={"scope": "openid email profile"}
+    client_kwargs={"scope": "openid email profile https://www.googleapis.com/auth/gmail.send"}
 )
 
 def extract_text_from_pdf(file_bytes):
     with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
         return "\n".join(page.extract_text() or "" for page in pdf.pages)
 
-def generate_email(resume_text, job_description):
+def generate_email_content(resume_text, job_description):
     prompt = f"You are an expert career coach. Write a short personalized cold email for a job application.\n\nRESUME:\n{resume_text[:3000]}\n\nJOB DESCRIPTION:\n{job_description[:2000]}\n\nWrite ONLY the email with subject line. Keep it under 200 words."
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
@@ -55,17 +58,10 @@ async def google_callback(request: Request):
     request.session["user"] = {
         "email": user["email"],
         "name": user["name"],
-        "picture": user.get("picture", "")
+        "picture": user.get("picture", ""),
+        "access_token": token.get("access_token", "")
     }
-    return RedirectResponse(url="/app")
-
-@app.get("/app", response_class=HTMLResponse)
-def app_page(request: Request):
-    user = request.session.get("user")
-    if not user:
-        return RedirectResponse(url="/")
-    with open("index.html") as f:
-        return f.read()
+    return RedirectResponse(url="/")
 
 @app.get("/me")
 def get_user(request: Request):
@@ -89,15 +85,39 @@ async def generate(
     try:
         file_bytes = await resume.read()
         resume_text = extract_text_from_pdf(file_bytes)
-        email = generate_email(resume_text, job_description)
+        email = generate_email_content(resume_text, job_description)
         resume_id = str(uuid.uuid4())
         draft_id = str(uuid.uuid4())
         db.add(Resume(id=resume_id, filename=resume.filename, extracted_text=resume_text))
         db.add(EmailDraft(id=draft_id, job_description=job_description, generated_email=email))
         db.commit()
-        return {"email": email, "resume_id": resume_id}
+        return {"email": email, "resume_id": resume_id, "draft_id": draft_id}
     finally:
         db.close()
+
+@app.post("/send-email")
+async def send_email(request: Request):
+    user = request.session.get("user")
+    if not user:
+        return JSONResponse({"error": "Not logged in"}, status_code=401)
+    data = await request.json()
+    recipient = data.get("recipient")
+    subject = data.get("subject", "Job Application")
+    body = data.get("body")
+    if not recipient or not body:
+        return JSONResponse({"error": "Missing recipient or body"}, status_code=400)
+    try:
+        creds = Credentials(token=user["access_token"])
+        service = build("gmail", "v1", credentials=creds)
+        message = MIMEText(body)
+        message["to"] = recipient
+        message["subject"] = subject
+        message["from"] = user["email"]
+        raw = base64.urlsafe_b64encode(message.as_bytes()).decode()
+        service.users().messages().send(userId="me", body={"raw": raw}).execute()
+        return {"success": True, "message": "Email sent successfully!"}
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 @app.get("/history")
 def history(request: Request):
